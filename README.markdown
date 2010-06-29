@@ -3,9 +3,7 @@ Script backups easily to Amazon S3
 
 Avoid Disaster can be used to script daily, weekly or monthly backups and upload them to S3.
 
-For more information check out: 
-
-    [amix.dk: Avoid Disaster: Script backups easily to Amazon S3](http://amix.dk/blog/post/19529#avoid-disaster-Easily-script-daily-or-weekly-backups-to-S3) 
+For more information check out: [amix.dk: Avoid Disaster: Script backups easily to Amazon S3](http://amix.dk/blog/post/19529#avoid-disaster-Easily-script-daily-or-weekly-backups-to-S3) 
     
 To install it do following:
 

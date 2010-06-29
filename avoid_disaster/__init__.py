@@ -3,38 +3,21 @@
 avoid_disaster
 ~~~~~~~~
 
-Implements a simple backup script to backup things to Amazon S3.
-avoid_disaster be used to easily script daily, weekly or monthly backups.
+Avoid Disaster can be used to script daily, weekly or monthly backups and upload them to S3.
 
-Example of usage::
-
-    import os
-    from avoid_disaster import S3Uploader, gunzip_dir, generate_file_key
-
-    #--- Globals ----------------------------------------------
-    AWS_KEY = 'YOUR AWS KEY'
-    AWS_SECRET = 'YOUR AWS SECRET'
-
-    s3_uploader = S3Uploader(AWS_KEY,
-                             AWS_SECRET,
-                             'backups.your_domain.com')
-
-    #--- Backup directory ----------------------------------------------
-    file_key = generate_file_key('test_dir.%(weekday)s.tar.gz')
-
-    gz_filename = gunzip_dir('test_dir/', file_key)
-
-    s3_uploader.upload(file_key, gz_filename, delete_old=True)
-
-    os.remove(gz_filename)
+More info:
+    http://amix.dk/blog/post/19529#Avoid-Disaster-Script-backups-easily-to-S3
 
 :copyright: 2010 by amix
 :license: BSD, see LICENSE for more details."""
+
+
 import os, sys
 from datetime import datetime
 
 from boto.s3.connection import S3Connection
 from boto.s3.key import Key
+
 
 class S3Uploader:
     """A simpler uploader to S3 using boto library."""
@@ -43,8 +26,23 @@ class S3Uploader:
         self.connection = S3Connection(aws_key, aws_secret)
         self.bucket = self.connection.get_bucket(bucket_name)
 
-    def upload(self, filekey, filename, delete_old=False):
-        if not delete_old:
+    def compress_and_upload(self, directory, filename, replace_old=False):
+        """Helper function that gunzips `directory`, generates a filekey from `filename`,
+        uploads it to S3 and deletes the gunzip."""
+        file_key = generate_file_key(filename)
+        gz_filename = gunzip_dir(directory, os.path.join('/', 'tmp', file_key))
+
+        try:
+            self.upload(file_key, gz_filename, replace_old=replace_old)
+        finally:
+            os.remove(gz_filename)
+
+    def upload(self, filekey, filename, replace_old=False):
+        """Upload `filename` as `filekey`.
+        If `replace_old` is True then the old key is replaced,
+        else an error is thrown on duplicates.
+        """
+        if not replace_old:
             if self.has_file(filekey):
                 print 'ERROR: File already found.'
                 sys.exit(-1)
@@ -57,9 +55,11 @@ class S3Uploader:
                                        replace=True)
 
     def has_file(self, filekey):
+        """Return True if `filekey` is found."""
         return self.bucket.get_key(filekey)
 
     def delete_file(self, filekey):
+        """Deletes `filekey` from the bucket."""
         return self.bucket.delete_key(filekey)
 
 
@@ -67,14 +67,13 @@ def generate_file_key(filename):
     """Helper to generate daily backups.
 
     Example of usage::
-        generate_file_key('my_backup.%(weekday)s.tar.gz')
-
+        generate_file_key('my_backup.%(weekday)s.tgz')
     """
     now = datetime.utcnow()
     common = {
         'weekday': now.strftime("%A"),
-        'month': now.strftime("%B"),
-        'week': now.strftime("%U")
+        'month_name': now.strftime("%B"),
+        'week_number': now.strftime("%U")
     }
     return filename % common
 
@@ -82,9 +81,10 @@ def generate_file_key(filename):
 def gunzip_dir(directory, output_filename):
     """Helper to tar and gunzip a directory.
 
-    TODO: Should probably use subprocess."""
+    TODO: Should probably use subprocess.
+    """
     directory = os.path.realpath(directory)
-    cmd = 'tar -cvf - "%s" | gzip -c > "%s"' % (directory, output_filename)
+    cmd = 'tar czPf "%s" "%s"' % (output_filename, directory)
 
     print 'Running... %s' % cmd
     r_code = os.system(cmd)

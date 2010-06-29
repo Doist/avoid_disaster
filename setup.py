@@ -28,21 +28,20 @@ setup(name='avoid_disaster',
       platforms=["Any"],
       license="BSD",
       keywords='backups amazon s3',
-      description="Implements a simple backup script to backup things to Amazon S3",
+      description="Script backups easily to Amazon S3",
       long_description="""\
 avoid_disaster
 ---------------
 
-Implements a simple backup script to backup things to Amazon S3.
-avoid_disaster be used to easily script daily, weekly or monthly backups.
+Avoid Disaster can be used to script daily, weekly or monthly backups and upload them to S3.
 
 For more information check out:
-http://amix.dk/blog/post/19529#avoid-disaster-Easily-script-daily-or-weekly-backups-to-S3
+http://amix.dk/blog/post/19529#Avoid-Disaster-Script-backups-easily-to-Amazon-S3
 
 Examples
 ----------
 
-Backup test_dir to S3::
+Example of creating a backups of test_dir/::
 
     import os
     from avoid_disaster import S3Uploader, gunzip_dir, generate_file_key
@@ -55,13 +54,27 @@ Backup test_dir to S3::
                              AWS_SECRET,
                              'backups.your_domain.com')
 
-    #--- Backup directory ----------------------------------------------
-    file_key = generate_file_key('test_dir.%(weekday)s.tar.gz')
+    #--- Easy usage ----------------------------------------------
+    #Daily
+    s3_uploader.compress_and_upload('test_dir/',
+                                    'test_dir.%(weekday)s.tgz',
+                                    replace_old=True)
 
+    #Monthly
+    s3_uploader.compress_and_upload('test_dir/',
+                                    'test_dir.%(month_name)s.tgz',
+                                    replace_old=True)
+
+    #Weekly
+    s3_uploader.compress_and_upload('test_dir/',
+                                    'test_dir.%(week_number)s.tgz',
+                                    replace_old=True)
+
+
+    #--- Generic usage ----------------------------------------------
+    file_key = generate_file_key('test_dir.%(weekday)s.tgz')
     gz_filename = gunzip_dir('test_dir/', file_key)
-
-    s3_uploader.upload(file_key, gz_filename, delete_old=True)
-
+    s3_uploader.upload(file_key, gz_filename, replace_old=True)
     os.remove(gz_filename)
 
 Copyright: 2010 by amix

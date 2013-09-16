@@ -26,11 +26,15 @@ class S3Uploader:
         self.connection = S3Connection(aws_key, aws_secret)
         self.bucket = self.connection.get_bucket(bucket_name)
 
-    def compress_and_upload(self, directory, filename, replace_old=False):
+    def compress_and_upload(self, directory, filename, replace_old=False,
+                                  temp_dir='/tmp'):
         """Helper function that gunzips `directory`, generates a filekey from `filename`,
-        uploads it to S3 and deletes the gunzip."""
+        uploads it to S3 and deletes the gunzip.
+
+        Will as default store temp files in `temp_dir` (/tmp).
+        """
         file_key = generate_file_key(filename)
-        gz_filename = gunzip_dir(directory, os.path.join('/', 'tmp', file_key))
+        gz_filename = gunzip_dir(directory, os.path.join(temp_dir, file_key))
 
         try:
             self.upload(file_key, gz_filename, replace_old=replace_old)

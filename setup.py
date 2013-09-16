@@ -12,12 +12,12 @@ ez_setup.use_setuptools()
 from setuptools import setup
 
 setup(name='avoid_disaster',
-      version = '1.0',
+      version = '1.1',
       author="amix",
       author_email="amix@amix.dk",
       url="http://www.amix.dk/",
       classifiers=[
-        "Development Status :: 4 - Beta",
+        "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Developers",
         "License :: OSI Approved :: BSD License",
         "Operating System :: OS Independent",

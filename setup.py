@@ -12,7 +12,7 @@ ez_setup.use_setuptools()
 from setuptools import setup
 
 setup(name='avoid_disaster',
-      version = '1.1',
+      version = '1.3',
       author="amix",
       author_email="amix@amix.dk",
       url="http://www.amix.dk/",
